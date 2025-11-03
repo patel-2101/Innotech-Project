@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Smart Complaint Management System
 
 A comprehensive web application built with **Next.js** and **Tailwind CSS** for managing civic complaints efficiently. This system provides separate portals for citizens, workers, office administrators, and system administrators.
@@ -106,3 +107,6 @@ Backend integration needed for:
 ---
 
 Built with Next.js and Tailwind CSS
+=======
+# Innotech-Project
+>>>>>>> 45628b4cc817c177950bf577d2d9024c62da8a9a
