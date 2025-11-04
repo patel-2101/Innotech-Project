@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server'
 import dbConnect from '@/lib/mongodb'
 import Citizen from '@/models/Citizen'
 import { validateRequest, citizenSignupSchema } from '@/lib/validation'
-import { hashPassword, generateOTP, getOTPExpiry } from '@/lib/auth'
-import { sendOTPEmail } from '@/lib/email'
+import { hashPassword } from '@/lib/auth'
 
 export async function POST(request: Request) {
   try {
@@ -41,35 +40,21 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await hashPassword(password)
 
-    // Generate OTP
-    const otp = generateOTP()
-    const otpExpiry = getOTPExpiry()
-
-    // Create citizen
+    // Create citizen (no OTP verification needed)
     const citizen = new Citizen({
       name,
       email,
       phone,
       password: hashedPassword,
-      otp,
-      otpExpiry,
-      verified: false,
+      verified: true, // Auto-verify since OTP is removed
       address: address || '',
     })
 
     await citizen.save()
 
-    // Send OTP via email
-    const emailSent = await sendOTPEmail(email, otp, name)
-
-    if (!emailSent) {
-      console.error('Failed to send OTP email')
-      // Don't fail the signup, user can resend OTP
-    }
-
     return NextResponse.json({
       success: true,
-      message: 'Registration successful. Please verify your email with OTP.',
+      message: 'Registration successful! You can now login.',
       data: {
         citizenId: citizen._id,
         email: citizen.email,

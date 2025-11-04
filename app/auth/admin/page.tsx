@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { User, Lock, Shield, ArrowLeft } from 'lucide-react'
+import { User, Lock, Shield, ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -11,13 +11,49 @@ import { Input } from '@/components/ui/input'
 export default function AdminLogin() {
   const router = useRouter()
   const [formData, setFormData] = useState({
-    adminId: '',
+    userId: '',
     password: ''
   })
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    router.push('/admin/dashboard')
+    setError('')
+    setLoading(true)
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: formData.userId,
+          password: formData.password,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.data.user.role === 'admin') {
+        // Save auth data to localStorage
+        localStorage.setItem('authToken', data.data.token)
+        localStorage.setItem('userRole', 'admin')
+        localStorage.setItem('userId', data.data.user.id)
+        localStorage.setItem('userName', data.data.user.userId)
+        
+        router.push('/admin/dashboard')
+      } else if (data.success && data.data.user.role !== 'admin') {
+        setError('Invalid admin credentials')
+      } else {
+        setError(data.message || 'Login failed')
+      }
+    } catch (err) {
+      setError('Network error. Please try again.')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -36,27 +72,56 @@ export default function AdminLogin() {
         </CardHeader>
         
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              type="text"
-              placeholder="Enter Admin ID"
-              icon={User}
-              value={formData.adminId}
-              onChange={(e) => setFormData({ ...formData, adminId: e.target.value })}
-              required
-            />
-            
-            <Input
-              type="password"
-              placeholder="Enter Password"
-              icon={Lock}
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              required
-            />
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
-            <Button type="submit" className="w-full">
-              Login
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Admin ID
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Enter Admin ID"
+                  value={formData.userId}
+                  onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter Password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            <Button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700">
+              {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
 

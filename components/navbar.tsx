@@ -2,17 +2,25 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Menu, X, AlertCircle } from 'lucide-react'
+import { Menu, X, AlertCircle, UserCircle, ChevronDown } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isLoginDropdownOpen, setIsLoginDropdownOpen] = useState(false)
 
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/about', label: 'About' },
     { href: '/contact', label: 'Contact' },
     { href: '/process', label: 'Process' },
+  ]
+
+  const loginOptions = [
+    { href: '/auth/citizen/login', label: 'Citizen Login', color: 'text-blue-600' },
+    { href: '/auth/worker', label: 'Worker Login', color: 'text-green-600' },
+    { href: '/auth/office', label: 'Office Login', color: 'text-purple-600' },
+    { href: '/auth/admin', label: 'Admin Login', color: 'text-red-600' },
   ]
 
   return (
@@ -40,6 +48,34 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+            
+            {/* Login Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setIsLoginDropdownOpen(!isLoginDropdownOpen)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+              >
+                <UserCircle className="w-5 h-5" />
+                <span>Login</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${isLoginDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {isLoginDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
+                  {loginOptions.map((option) => (
+                    <Link
+                      key={option.href}
+                      href={option.href}
+                      onClick={() => setIsLoginDropdownOpen(false)}
+                      className={`block px-4 py-2 ${option.color} dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
+                    >
+                      {option.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+            
             <ThemeToggle />
           </div>
 
@@ -69,6 +105,23 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
+              
+              {/* Mobile Login Options */}
+              <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                <p className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                  Login As
+                </p>
+                {loginOptions.map((option) => (
+                  <Link
+                    key={option.href}
+                    href={option.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`block px-4 py-2 ${option.color} dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors`}
+                  >
+                    {option.label}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         )}
