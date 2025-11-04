@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import connectDB from '@/lib/mongodb'
+import dbConnect from '@/lib/mongodb'
 import Citizen from '@/models/Citizen'
 import { validateRequest, citizenSigninSchema } from '@/lib/validation'
 import { comparePassword, generateToken, isOTPValid } from '@/lib/auth'
 
 export async function POST(request: Request) {
   try {
-    await connectDB()
+    await dbConnect()
 
     const body = await request.json()
     const validation = validateRequest(citizenSigninSchema, body)

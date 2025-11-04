@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import connectDB from '@/lib/mongodb'
+import dbConnect from '@/lib/mongodb'
 import Complaint from '@/models/Complaint'
 import { requireWorker } from '@/lib/middleware'
 import { uploadToCloudinary } from '@/lib/cloudinary'
@@ -7,7 +7,7 @@ import { isWithinAllowedDistance } from '@/lib/geolocation'
 
 async function handler(request: Request, user: { id: string; role: string }) {
   try {
-    await connectDB()
+    await dbConnect()
 
     const formData = await request.formData()
     

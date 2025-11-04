@@ -7,6 +7,7 @@ export interface ICitizen {
   email: string
   password: string
   address?: string
+  profilePhoto?: string
   otp?: string
   otpExpiry?: Date
   verified: boolean
@@ -42,6 +43,10 @@ const CitizenSchema = new Schema<ICitizen>(
     address: {
       type: String,
       trim: true,
+    },
+    profilePhoto: {
+      type: String,
+      default: '',
     },
     otp: {
       type: String,

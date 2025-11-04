@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import connectDB from '@/lib/mongodb'
+import dbConnect from '@/lib/mongodb'
 import Complaint from '@/models/Complaint'
 import { requireCitizen } from '@/lib/middleware'
 import { validateRequest, complaintSchema } from '@/lib/validation'
@@ -7,7 +7,7 @@ import { uploadToCloudinary } from '@/lib/cloudinary'
 
 async function handler(request: Request, user: { id: string; role: string }) {
   try {
-    await connectDB()
+    await dbConnect()
 
     const formData = await request.formData()
     

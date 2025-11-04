@@ -28,16 +28,19 @@ if (!global.mongoose) {
 
 async function dbConnect() {
   if (cached.conn) {
+    console.log('📦 Using cached MongoDB connection')
     return cached.conn
   }
 
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      dbName: 'smart_complaint_system', // Explicitly set database name
     }
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      console.log('✅ MongoDB Connected Successfully')
+      console.log('✅ MongoDB Connected Successfully to smart_complaint_system')
+      console.log('📍 Connection URI:', MONGODB_URI)
       return mongoose
     })
   }
@@ -46,10 +49,13 @@ async function dbConnect() {
     cached.conn = await cached.promise
   } catch (e) {
     cached.promise = null
+    console.error('❌ MongoDB Connection Error:', e)
     throw e
   }
 
   return cached.conn
 }
 
+// Export as both default and named export for flexibility
 export default dbConnect
+export { dbConnect as connectDB }

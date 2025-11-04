@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, FileText, Star, Calendar, MapPin, Image as ImageIcon } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Plus, FileText, Star, Calendar, MapPin, Image as ImageIcon, User, Home } from 'lucide-react'
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,7 +21,26 @@ interface Complaint {
 }
 
 export default function CitizenDashboard() {
+  const router = useRouter()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [userName, setUserName] = useState('')
+  const [userPhone, setUserPhone] = useState('')
+
+  useEffect(() => {
+    // Check auth
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      router.push('/auth/citizen/login')
+      return
+    }
+
+    // Get user data
+    const name = localStorage.getItem('userName') || 'Citizen'
+    const phone = localStorage.getItem('userPhone') || ''
+    setUserName(name)
+    setUserPhone(phone)
+  }, [router])
+
   const [complaints] = useState<Complaint[]>([
     {
       id: 'C001',
@@ -60,8 +81,44 @@ export default function CitizenDashboard() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <DashboardHeader
         title="Citizen Dashboard"
-        subtitle="Welcome back! Manage your complaints here."
+        subtitle={`Welcome back, ${userName}!${userPhone ? ` (${userPhone})` : ''}`}
       />
+
+      {/* Navigation Bar */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex gap-6 overflow-x-auto">
+            <Link
+              href="/citizen/dashboard"
+              className="flex items-center gap-2 py-4 px-2 border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 font-medium whitespace-nowrap"
+            >
+              <Home className="w-4 h-4" />
+              Home
+            </Link>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="flex items-center gap-2 py-4 px-2 border-b-2 border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap"
+            >
+              <Plus className="w-4 h-4" />
+              New Complaint
+            </button>
+            <Link
+              href="/citizen/dashboard"
+              className="flex items-center gap-2 py-4 px-2 border-b-2 border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap"
+            >
+              <FileText className="w-4 h-4" />
+              My Complaints
+            </Link>
+            <Link
+              href="/citizen/profile"
+              className="flex items-center gap-2 py-4 px-2 border-b-2 border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap"
+            >
+              <User className="w-4 h-4" />
+              Profile
+            </Link>
+          </nav>
+        </div>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Action Buttons */}

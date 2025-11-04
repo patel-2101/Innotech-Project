@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import connectDB from '@/lib/mongodb'
+import dbConnect from '@/lib/mongodb'
 import Complaint from '@/models/Complaint'
 import Worker from '@/models/Worker'
 import { requireRole } from '@/lib/middleware'
@@ -7,7 +7,7 @@ import { Types } from 'mongoose'
 
 async function handler(request: Request, user: { id: string; role: string }) {
   try {
-    await connectDB()
+    await dbConnect()
 
     const body = await request.json()
     const { complaintId, workerId } = body

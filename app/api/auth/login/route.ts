@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import connectDB from '@/lib/mongodb'
+import dbConnect from '@/lib/mongodb'
 import Worker from '@/models/Worker'
 import Office from '@/models/Office'
 import Admin from '@/models/Admin'
@@ -8,7 +8,7 @@ import { comparePassword, generateToken } from '@/lib/auth'
 
 export async function POST(request: Request) {
   try {
-    await connectDB()
+    await dbConnect()
 
     const body = await request.json()
     const validation = validateRequest(userLoginSchema, body)

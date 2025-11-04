@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { LogOut, Moon, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useTheme } from 'next-themes'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface DashboardHeaderProps {
   title: string
@@ -17,9 +17,9 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
   const [mounted, setMounted] = useState(false)
 
   // Avoid hydration mismatch - mount after first render
-  if (!mounted) {
-    setTimeout(() => setMounted(true), 0)
-  }
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleLogout = () => {
     // Clear auth tokens

@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import dbConnect from '@/lib/mongodb'
-import Worker from '@/models/Worker'
+import Office from '@/models/Office'
 import { requireRole } from '@/lib/middleware'
-import { validateRequest, workerSchema } from '@/lib/validation'
+import { validateRequest, officeSchema } from '@/lib/validation'
 import { hashPassword } from '@/lib/auth'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -11,7 +11,7 @@ async function handler(request: Request, _user: { id: string; role: string }) {
     await dbConnect()
 
     const body = await request.json()
-    const validation = validateRequest(workerSchema, body)
+    const validation = validateRequest(officeSchema, body)
 
     if (!validation.valid) {
       return NextResponse.json(
@@ -20,13 +20,13 @@ async function handler(request: Request, _user: { id: string; role: string }) {
       )
     }
 
-    const { name, userId, password, department, phone, email } = validation.value
+    const { name, userId, password, department, location, phone, email } = validation.value
 
     // Check if userId already exists
-    const existingWorker = await Worker.findOne({ userId })
-    if (existingWorker) {
+    const existingOffice = await Office.findOne({ userId })
+    if (existingOffice) {
       return NextResponse.json(
-        { success: false, message: 'Worker ID already exists' },
+        { success: false, message: 'Office ID already exists' },
         { status: 409 }
       )
     }
@@ -34,36 +34,37 @@ async function handler(request: Request, _user: { id: string; role: string }) {
     // Hash password
     const hashedPassword = await hashPassword(password)
 
-    // Create worker
-    const worker = new Worker({
+    // Create office
+    const office = new Office({
       name,
       userId,
       password: hashedPassword,
       department,
+      location: location || '',
       phone: phone || '',
       email: email || '',
-      status: 'active',
-      assignedTasks: [],
+      workers: [],
+      complaints: [],
     })
 
-    await worker.save()
+    await office.save()
 
     return NextResponse.json({
       success: true,
-      message: 'Worker created successfully',
+      message: 'Office created successfully',
       data: {
-        workerId: worker._id,
-        userId: worker.userId,
-        department: worker.department,
+        officeId: office._id,
+        userId: office.userId,
+        department: office.department,
       },
     })
   } catch (error) {
-    console.error('Create worker error:', error)
+    console.error('Create office error:', error)
     return NextResponse.json(
-      { success: false, message: 'Failed to create worker' },
+      { success: false, message: 'Failed to create office' },
       { status: 500 }
     )
   }
 }
 
-export const POST = requireRole(['admin', 'superadmin', 'office'], handler)
+export const POST = requireRole(['admin', 'superadmin'], handler)
