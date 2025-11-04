@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Edit, Trash2, LogOut, Users, Building2, Briefcase, FileText, BarChart } from 'lucide-react'
+import { Plus, Edit, Trash2, Users, Building2, Briefcase, FileText, BarChart } from 'lucide-react'
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
@@ -24,24 +25,10 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Admin Dashboard
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                System administration and management
-              </p>
-            </div>
-            <Button icon={LogOut} variant="outline" size="sm">
-              Logout
-            </Button>
-          </div>
-        </div>
-      </div>
+      <DashboardHeader
+        title="Admin Dashboard"
+        subtitle="System administration and management"
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tabs */}

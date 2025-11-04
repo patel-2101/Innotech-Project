@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { UserPlus, LogOut, AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react'
+import { UserPlus, AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react'
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
@@ -74,24 +75,10 @@ export default function OfficeDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Office Dashboard
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Manage department complaints and assign workers
-              </p>
-            </div>
-            <Button icon={LogOut} variant="outline" size="sm">
-              Logout
-            </Button>
-          </div>
-        </div>
-      </div>
+      <DashboardHeader
+        title="Office Dashboard"
+        subtitle="Manage department complaints and assign workers"
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Status Cards */}
