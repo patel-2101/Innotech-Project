@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, FileText, Star, Calendar, MapPin, Image as ImageIcon, User, Home, RefreshCw, Clock, CheckCircle, XCircle } from 'lucide-react'
+import { Plus, FileText, Star, Calendar, MapPin, Image as ImageIcon, User, Home, RefreshCw, Clock, CheckCircle, XCircle, X, Building2 } from 'lucide-react'
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -66,6 +66,8 @@ export default function CitizenDashboard() {
   const [complaints, setComplaints] = useState<Complaint[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [showTrackingModal, setShowTrackingModal] = useState(false)
+  const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null)
 
   // Check authentication on mount
   useEffect(() => {
@@ -296,15 +298,17 @@ export default function CitizenDashboard() {
             </Card>
           </Link>
 
-          <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 border-transparent hover:border-purple-500 cursor-pointer">
-            <CardContent className="pt-8 pb-8 text-center">
-              <div className="bg-gradient-to-br from-purple-500 to-purple-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                <FileText className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Track Complaints</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Monitor the status of your complaints</p>
-            </CardContent>
-          </Card>
+          <div onClick={() => setShowTrackingModal(true)} className="cursor-pointer">
+            <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 border-transparent hover:border-purple-500">
+              <CardContent className="pt-8 pb-8 text-center">
+                <div className="bg-gradient-to-br from-purple-500 to-purple-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                  <FileText className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Track Complaints</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Monitor the status of your complaints</p>
+              </CardContent>
+            </Card>
+          </div>
 
           <Link href="/citizen/profile" className="w-full group">
             <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 border-transparent hover:border-green-500 cursor-pointer">
@@ -496,6 +500,390 @@ export default function CitizenDashboard() {
           )}
         </div>
       </div>
+
+      {/* Tracking Modal */}
+      {showTrackingModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden my-8">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-lg">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Track Complaints</h2>
+                  <p className="text-purple-100 text-sm">Monitor progress of all your complaints</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowTrackingModal(false)
+                  setSelectedComplaint(null)
+                }}
+                className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+              {complaints.length === 0 ? (
+                <div className="text-center py-12">
+                  <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400 text-lg">No complaints to track</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">Create your first complaint to see tracking information</p>
+                </div>
+              ) : selectedComplaint ? (
+                /* Detailed Progress View */
+                <div className="space-y-6">
+                  <button
+                    onClick={() => setSelectedComplaint(null)}
+                    className="text-purple-600 dark:text-purple-400 hover:text-purple-700 flex items-center gap-2 mb-4"
+                  >
+                    ← Back to all complaints
+                  </button>
+
+                  <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 p-6 rounded-xl border border-purple-200 dark:border-purple-800">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{selectedComplaint.title}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">ID: {selectedComplaint._id}</p>
+                  </div>
+
+                  {/* Progress Timeline */}
+                  <div className="relative">
+                    <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 via-purple-500 to-green-500"></div>
+                    
+                    <div className="space-y-8">
+                      {/* Created */}
+                      <div className="relative flex gap-4">
+                        <div className="flex-shrink-0">
+                          <div className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg ${
+                            selectedComplaint.status ? 'bg-green-500' : 'bg-gray-300'
+                          }`}>
+                            <CheckCircle className="w-8 h-8 text-white" />
+                          </div>
+                        </div>
+                        <div className="flex-1 bg-white dark:bg-gray-700 p-5 rounded-xl shadow-md border-2 border-green-200 dark:border-green-800">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-lg font-bold text-gray-900 dark:text-white">Complaint Created</h4>
+                            <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-3 py-1 rounded-full font-semibold">
+                              Completed
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Your complaint has been registered successfully</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-500 flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {new Date(selectedComplaint.createdAt).toLocaleString('en-IN', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Assigned to Office */}
+                      {selectedComplaint.officeId ? (
+                        <div className="relative flex gap-4">
+                          <div className="flex-shrink-0">
+                            <div className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center shadow-lg">
+                              <Building2 className="w-8 h-8 text-white" />
+                            </div>
+                          </div>
+                          <div className="flex-1 bg-white dark:bg-gray-700 p-5 rounded-xl shadow-md border-2 border-blue-200 dark:border-blue-800">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-lg font-bold text-gray-900 dark:text-white">Assigned to Office</h4>
+                              <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full font-semibold">
+                                Completed
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                              Office: <span className="font-semibold text-gray-900 dark:text-white">{selectedComplaint.officeId.name}</span>
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Department: <span className="font-semibold capitalize">{selectedComplaint.officeId.department}</span>
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="relative flex gap-4">
+                          <div className="flex-shrink-0">
+                            <div className="w-16 h-16 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center shadow-lg">
+                              <Building2 className="w-8 h-8 text-white" />
+                            </div>
+                          </div>
+                          <div className="flex-1 bg-white dark:bg-gray-700 p-5 rounded-xl shadow-md border-2 border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-lg font-bold text-gray-900 dark:text-white">Assign to Office</h4>
+                              <span className="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 px-3 py-1 rounded-full font-semibold">
+                                Pending
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Waiting for office assignment...</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Assigned to Worker */}
+                      {selectedComplaint.assignedTo ? (
+                        <div className="relative flex gap-4">
+                          <div className="flex-shrink-0">
+                            <div className="w-16 h-16 rounded-full bg-purple-500 flex items-center justify-center shadow-lg">
+                              <User className="w-8 h-8 text-white" />
+                            </div>
+                          </div>
+                          <div className="flex-1 bg-white dark:bg-gray-700 p-5 rounded-xl shadow-md border-2 border-purple-200 dark:border-purple-800">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-lg font-bold text-gray-900 dark:text-white">Assigned to Worker</h4>
+                              <span className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full font-semibold">
+                                Completed
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                              Worker: <span className="font-semibold text-gray-900 dark:text-white">{selectedComplaint.assignedTo.name}</span>
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Employee ID: <span className="font-mono font-semibold">{selectedComplaint.assignedTo.userId}</span>
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="relative flex gap-4">
+                          <div className="flex-shrink-0">
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg ${
+                              selectedComplaint.officeId ? 'bg-gray-300 dark:bg-gray-600' : 'bg-gray-200 dark:bg-gray-700'
+                            }`}>
+                              <User className="w-8 h-8 text-white" />
+                            </div>
+                          </div>
+                          <div className="flex-1 bg-white dark:bg-gray-700 p-5 rounded-xl shadow-md border-2 border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-lg font-bold text-gray-900 dark:text-white">Assign to Worker</h4>
+                              <span className="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 px-3 py-1 rounded-full font-semibold">
+                                {selectedComplaint.officeId ? 'Pending' : 'Waiting'}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              {selectedComplaint.officeId 
+                                ? 'Office will assign a worker soon...'
+                                : 'Waiting for office assignment first...'}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* In Progress */}
+                      <div className="relative flex gap-4">
+                        <div className="flex-shrink-0">
+                          <div className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg ${
+                            selectedComplaint.status === 'in-progress' || selectedComplaint.status === 'completed'
+                              ? 'bg-orange-500'
+                              : 'bg-gray-200 dark:bg-gray-700'
+                          }`}>
+                            <RefreshCw className={`w-8 h-8 text-white ${
+                              selectedComplaint.status === 'in-progress' ? 'animate-spin' : ''
+                            }`} />
+                          </div>
+                        </div>
+                        <div className={`flex-1 bg-white dark:bg-gray-700 p-5 rounded-xl shadow-md border-2 ${
+                          selectedComplaint.status === 'in-progress' || selectedComplaint.status === 'completed'
+                            ? 'border-orange-200 dark:border-orange-800'
+                            : 'border-gray-200 dark:border-gray-700'
+                        }`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-lg font-bold text-gray-900 dark:text-white">Work In Progress</h4>
+                            <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                              selectedComplaint.status === 'in-progress' || selectedComplaint.status === 'completed'
+                                ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
+                                : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
+                            }`}>
+                              {selectedComplaint.status === 'in-progress' || selectedComplaint.status === 'completed' ? 'Active' : 'Pending'}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {selectedComplaint.status === 'in-progress' || selectedComplaint.status === 'completed'
+                              ? 'Worker is actively working on resolving your complaint'
+                              : 'Work will begin once worker is assigned...'}
+                          </p>
+                          {selectedComplaint.progressPhotos && selectedComplaint.progressPhotos.length > 0 && (
+                            <p className="text-xs text-green-600 dark:text-green-400 mt-2 flex items-center gap-1">
+                              <CheckCircle className="w-4 h-4" />
+                              {selectedComplaint.progressPhotos.length} progress update(s) uploaded
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Completed */}
+                      <div className="relative flex gap-4">
+                        <div className="flex-shrink-0">
+                          <div className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg ${
+                            selectedComplaint.status === 'completed'
+                              ? 'bg-green-500'
+                              : selectedComplaint.status === 'rejected'
+                              ? 'bg-red-500'
+                              : 'bg-gray-200 dark:bg-gray-700'
+                          }`}>
+                            {selectedComplaint.status === 'completed' ? (
+                              <CheckCircle className="w-8 h-8 text-white" />
+                            ) : selectedComplaint.status === 'rejected' ? (
+                              <XCircle className="w-8 h-8 text-white" />
+                            ) : (
+                              <Clock className="w-8 h-8 text-white" />
+                            )}
+                          </div>
+                        </div>
+                        <div className={`flex-1 bg-white dark:bg-gray-700 p-5 rounded-xl shadow-md border-2 ${
+                          selectedComplaint.status === 'completed'
+                            ? 'border-green-200 dark:border-green-800'
+                            : selectedComplaint.status === 'rejected'
+                            ? 'border-red-200 dark:border-red-800'
+                            : 'border-gray-200 dark:border-gray-700'
+                        }`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-lg font-bold text-gray-900 dark:text-white">
+                              {selectedComplaint.status === 'completed' 
+                                ? 'Completed' 
+                                : selectedComplaint.status === 'rejected'
+                                ? 'Rejected'
+                                : 'Resolution'}
+                            </h4>
+                            <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                              selectedComplaint.status === 'completed'
+                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                                : selectedComplaint.status === 'rejected'
+                                ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                            }`}>
+                              {selectedComplaint.status === 'completed' 
+                                ? 'Resolved' 
+                                : selectedComplaint.status === 'rejected'
+                                ? 'Rejected'
+                                : 'Pending'}
+                            </span>
+                          </div>
+                          {selectedComplaint.status === 'completed' ? (
+                            <>
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                Your complaint has been successfully resolved!
+                              </p>
+                              {selectedComplaint.completedAt && (
+                                <p className="text-xs text-gray-500 dark:text-gray-500 flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  Completed on {new Date(selectedComplaint.completedAt).toLocaleString('en-IN', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </p>
+                              )}
+                            </>
+                          ) : selectedComplaint.status === 'rejected' ? (
+                            <>
+                              <p className="text-sm text-red-600 dark:text-red-400 mb-2">
+                                Complaint was rejected
+                              </p>
+                              {selectedComplaint.rejectionReason && (
+                                <p className="text-xs text-gray-600 dark:text-gray-400 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                                  Reason: {selectedComplaint.rejectionReason}
+                                </p>
+                              )}
+                            </>
+                          ) : (
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              Waiting for complaint resolution...
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Complaints List */
+                <div className="space-y-4">
+                  {complaints.map((complaint) => (
+                    <div
+                      key={complaint._id}
+                      onClick={() => setSelectedComplaint(complaint)}
+                      className="bg-white dark:bg-gray-700 p-5 rounded-xl shadow-md hover:shadow-xl transition-all cursor-pointer border-2 border-transparent hover:border-purple-400"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-bold text-gray-900 dark:text-white mb-1 line-clamp-1">{complaint.title}</h3>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">ID: {complaint._id.slice(-8)}</p>
+                        </div>
+                        <span className={`px-3 py-1 text-xs font-semibold rounded-full shrink-0 ${statusColors[complaint.status]}`}>
+                          {complaint.status === 'in-progress' ? 'In Progress' : complaint.status.charAt(0).toUpperCase() + complaint.status.slice(1)}
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="mb-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Progress</span>
+                          <span className="text-xs font-bold text-purple-600 dark:text-purple-400">
+                            {complaint.status === 'completed' ? '100%' :
+                             complaint.status === 'in-progress' ? '75%' :
+                             complaint.assignedTo ? '50%' :
+                             complaint.officeId ? '25%' : '10%'}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5 overflow-hidden">
+                          <div
+                            className={`h-2.5 rounded-full transition-all duration-500 ${
+                              complaint.status === 'completed' ? 'bg-gradient-to-r from-green-400 to-green-600' :
+                              complaint.status === 'rejected' ? 'bg-gradient-to-r from-red-400 to-red-600' :
+                              complaint.status === 'in-progress' ? 'bg-gradient-to-r from-orange-400 to-orange-600' :
+                              complaint.assignedTo ? 'bg-gradient-to-r from-purple-400 to-purple-600' :
+                              complaint.officeId ? 'bg-gradient-to-r from-blue-400 to-blue-600' :
+                              'bg-gradient-to-r from-gray-400 to-gray-600'
+                            }`}
+                            style={{
+                              width: complaint.status === 'completed' ? '100%' :
+                                     complaint.status === 'rejected' ? '100%' :
+                                     complaint.status === 'in-progress' ? '75%' :
+                                     complaint.assignedTo ? '50%' :
+                                     complaint.officeId ? '25%' : '10%'
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Quick Info */}
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400 mb-1">Office</p>
+                          <p className="font-semibold text-gray-900 dark:text-white">
+                            {complaint.officeId?.name || 'Not assigned'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400 mb-1">Worker</p>
+                          <p className="font-semibold text-gray-900 dark:text-white">
+                            {complaint.assignedTo?.name || 'Not assigned'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                        <button className="text-purple-600 dark:text-purple-400 hover:text-purple-700 text-sm font-semibold flex items-center gap-1">
+                          View detailed timeline →
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
