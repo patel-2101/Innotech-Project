@@ -17,11 +17,45 @@ export default function CitizenSignIn() {
     phone: '',
     otp: ''
   })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Redirect to dashboard (no backend logic yet)
-    router.push('/citizen/dashboard')
+    setError('')
+    setLoading(true)
+
+    try {
+      // Prepare request body based on login method
+      const requestBody = loginMethod === 'email' 
+        ? { email: formData.email, password: formData.password }
+        : { phone: formData.phone, otp: formData.otp }
+
+      const response = await fetch('/api/auth/citizen/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Store token in localStorage
+        localStorage.setItem('token', data.data.token)
+        localStorage.setItem('user', JSON.stringify(data.data.citizen))
+        localStorage.setItem('role', 'citizen')
+        
+        // Redirect to dashboard
+        router.push('/citizen/dashboard')
+      } else {
+        setError(data.message || 'Login failed. Please check your credentials.')
+      }
+    } catch (err) {
+      setError('An error occurred. Please try again.')
+      console.error('Login error:', err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -61,6 +95,12 @@ export default function CitizenSignIn() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded">
+                {error}
+              </div>
+            )}
+
             {loginMethod === 'email' ? (
               <>
                 <Input
@@ -70,6 +110,7 @@ export default function CitizenSignIn() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
+                  disabled={loading}
                 />
                 <Input
                   type="password"
@@ -78,6 +119,7 @@ export default function CitizenSignIn() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
+                  disabled={loading}
                 />
               </>
             ) : (
@@ -89,6 +131,7 @@ export default function CitizenSignIn() {
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   required
+                  disabled={loading}
                 />
                 <Input
                   type="text"
@@ -97,8 +140,9 @@ export default function CitizenSignIn() {
                   value={formData.otp}
                   onChange={(e) => setFormData({ ...formData, otp: e.target.value })}
                   required
+                  disabled={loading}
                 />
-                <Button type="button" variant="outline" className="w-full">
+                <Button type="button" variant="outline" className="w-full" disabled={loading}>
                   Send OTP
                 </Button>
               </>
@@ -113,8 +157,8 @@ export default function CitizenSignIn() {
               </Link>
             </div>
 
-            <Button type="submit" className="w-full">
-              Sign In
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
 

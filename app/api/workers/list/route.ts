@@ -21,8 +21,8 @@ async function handler(request: Request, _user: { id: string; role: string }) {
     // Fetch workers
     const workers = await Worker.find(query)
       .sort({ createdAt: -1 })
-      .select('-password')
-      .populate('assignedTasks', 'title status')
+      .select('-password -otp -otpExpiry')
+      .lean()
 
     return NextResponse.json({
       success: true,

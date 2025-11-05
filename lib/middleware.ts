@@ -5,6 +5,8 @@ export interface AuthUser {
   id: string
   role: string
   userId?: string
+  iat?: number
+  exp?: number
 }
 
 // Verify JWT token from request headers
@@ -12,12 +14,19 @@ export function getAuthUser(request: Request): AuthUser | null {
   const authHeader = request.headers.get('authorization')
   
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.log('No authorization header or invalid format')
     return null
   }
 
   const token = authHeader.substring(7) // Remove 'Bearer ' prefix
   const decoded = verifyToken(token)
 
+  if (!decoded) {
+    console.log('Token verification failed')
+    return null
+  }
+
+  console.log('Decoded user:', { id: decoded.id, role: decoded.role, userId: decoded.userId })
   return decoded
 }
 

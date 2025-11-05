@@ -23,10 +23,12 @@ export function generateToken(payload: { id: string; role: string; userId?: stri
 }
 
 // Verify JWT token
-export function verifyToken(token: string): { id: string; role: string; userId?: string } | null {
+export function verifyToken(token: string): { id: string; role: string; userId?: string; iat?: number; exp?: number } | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as { id: string; role: string; userId?: string }
-  } catch {
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; role: string; userId?: string; iat?: number; exp?: number }
+    return decoded
+  } catch (error) {
+    console.error('Token verification failed:', error)
     return null
   }
 }

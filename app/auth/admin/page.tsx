@@ -35,15 +35,18 @@ export default function AdminLogin() {
 
       const data = await response.json()
 
-      if (data.success && data.data.user.role === 'admin') {
-        // Save auth data to localStorage
-        localStorage.setItem('authToken', data.data.token)
-        localStorage.setItem('userRole', 'admin')
+      if (data.success && (data.data.user.role === 'admin' || data.data.user.role === 'superadmin')) {
+        // Save auth data to localStorage (use 'token' for consistency)
+        localStorage.setItem('token', data.data.token)
+        localStorage.setItem('authToken', data.data.token) // Keep for backward compatibility
+        localStorage.setItem('role', data.data.user.role)
+        localStorage.setItem('userRole', data.data.user.role)
         localStorage.setItem('userId', data.data.user.id)
         localStorage.setItem('userName', data.data.user.userId)
+        localStorage.setItem('user', JSON.stringify(data.data.user))
         
         router.push('/admin/dashboard')
-      } else if (data.success && data.data.user.role !== 'admin') {
+      } else if (data.success && data.data.user.role !== 'admin' && data.data.user.role !== 'superadmin') {
         setError('Invalid admin credentials')
       } else {
         setError(data.message || 'Login failed')

@@ -5,12 +5,15 @@ export interface IOffice {
   name: string
   userId: string
   password: string
+  plainPassword?: string
   department: string
   workers: mongoose.Types.ObjectId[]
   complaints: mongoose.Types.ObjectId[]
   location?: string
   phone?: string
   email?: string
+  otp?: string
+  otpExpiry?: Date
   createdAt: Date
   updatedAt: Date
 }
@@ -32,6 +35,10 @@ const OfficeSchema = new Schema<IOffice>(
       type: String,
       required: [true, 'Password is required'],
       minlength: 6,
+    },
+    plainPassword: {
+      type: String,
+      select: false, // Hidden by default for security
     },
     department: {
       type: String,
@@ -62,6 +69,12 @@ const OfficeSchema = new Schema<IOffice>(
       type: String,
       lowercase: true,
       trim: true,
+    },
+    otp: {
+      type: String,
+    },
+    otpExpiry: {
+      type: Date,
     },
   },
   {

@@ -17,11 +17,12 @@ async function handler(request: Request, user: { id: string; role: string }) {
     if (status) query.status = status
     if (department) query.department = department
 
-    // Fetch complaints
+    // Fetch complaints with complete details
     const complaints = await Complaint.find(query)
       .sort({ createdAt: -1 })
-      .populate('assignedTo', 'userId')
-      .populate('officeId', 'userId department')
+      .populate('assignedTo', 'userId name department phone email')
+      .populate('officeId', 'userId name department phone email')
+      .lean()
 
     return NextResponse.json({
       success: true,

@@ -14,6 +14,8 @@ export interface IWorker {
   phone?: string
   email?: string
   status: 'active' | 'inactive'
+  otp?: string
+  otpExpiry?: Date
   createdAt: Date
   updatedAt: Date
 }
@@ -71,6 +73,12 @@ const WorkerSchema = new Schema<IWorker>(
       type: String,
       enum: ['active', 'inactive'],
       default: 'active',
+    },
+    otp: {
+      type: String,
+    },
+    otpExpiry: {
+      type: Date,
     },
   },
   {
