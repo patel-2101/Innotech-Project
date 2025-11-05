@@ -126,7 +126,6 @@ export default function WorkerDashboard() {
       
       // Refresh complaints list
       await fetchAssignedComplaints()
-      setIsUploadModalOpen(false)
       alert('Status updated successfully!')
     } catch (err) {
       console.error('Error updating status:', err)
