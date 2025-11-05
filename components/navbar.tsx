@@ -13,16 +13,19 @@ export function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userRole, setUserRole] = useState('')
   const [userName, setUserName] = useState('')
+  const [userPhoto, setUserPhoto] = useState('')
 
   useEffect(() => {
     const checkAuth = () => {
       const token = localStorage.getItem('authToken')
       const role = localStorage.getItem('userRole')
       const name = localStorage.getItem('userName')
+      const photo = localStorage.getItem('userPhoto')
       
       setIsLoggedIn(!!token)
       setUserRole(role || '')
       setUserName(name || '')
+      setUserPhoto(photo || '')
     }
 
     // Check on mount
@@ -44,10 +47,12 @@ export function Navbar() {
     localStorage.removeItem('userEmail')
     localStorage.removeItem('userPhone')
     localStorage.removeItem('userDepartment')
+    localStorage.removeItem('userPhoto')
     
     setIsLoggedIn(false)
     setUserRole('')
     setUserName('')
+    setUserPhoto('')
     
     // Trigger navbar update
     window.dispatchEvent(new Event('storage'))
@@ -80,15 +85,15 @@ export function Navbar() {
   ]
 
   return (
-    <nav className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+    <nav className="sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="bg-blue-600 p-2 rounded-lg">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-2.5 rounded-xl shadow-lg group-hover:shadow-blue-500/50 transition-all">
               <AlertCircle className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">
+            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Smart Complaint
             </span>
           </Link>
@@ -110,10 +115,14 @@ export function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setIsLoginDropdownOpen(!isLoginDropdownOpen)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition-colors"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold shadow-lg hover:shadow-green-500/50 transition-all transform hover:scale-105"
                 >
-                  <UserCircle className="w-5 h-5" />
-                  <span>{userName || userRole}</span>
+                  {userRole === 'citizen' && userPhoto ? (
+                    <img src={userPhoto} alt="Profile" className="w-8 h-8 rounded-full object-cover border-2 border-white" />
+                  ) : (
+                    <UserCircle className="w-5 h-5" />
+                  )}
+                  <span className="max-w-[120px] truncate">{userName || userRole}</span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${isLoginDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 
@@ -143,7 +152,7 @@ export function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setIsLoginDropdownOpen(!isLoginDropdownOpen)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-blue-500/50 transition-all transform hover:scale-105"
                 >
                   <UserCircle className="w-5 h-5" />
                   <span>Login</span>

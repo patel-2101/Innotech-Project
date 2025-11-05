@@ -20,10 +20,7 @@ async function handler(request: Request, user: { id: string; role: string }) {
     // Fetch offices - include plainPassword field for admin
     const offices = await Office.find(query)
       .sort({ createdAt: -1 })
-      .select('-password') // Exclude hashed password
-      .select('+plainPassword') // Include plain password (field with select: false)
-      .populate('workers', 'userId name department')
-      .populate('complaints', 'title status')
+      .select('name userId department phone email location workers complaints createdAt updatedAt plainPassword')
       .lean()
 
     return NextResponse.json({

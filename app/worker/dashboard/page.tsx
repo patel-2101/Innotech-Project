@@ -136,167 +136,212 @@ export default function WorkerDashboard() {
     }
   }
 
+  const userName = typeof window !== 'undefined' ? localStorage.getItem('userName') || 'Worker' : 'Worker'
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <DashboardHeader
-        title="Worker Dashboard"
-        subtitle="Manage your assigned complaints"
-      />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-blue-950">
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzBoLTJWMGgydjMwem0wIDMwdi0yaC0ydjJoMnpNNiAzNnY0SDR2LTRoMnptMC0zMGg0VjRINnYyem0wIDBoLTJ2LTJoMnYyem0zMCAwdjJoLTJ2LTJoMnptLTMwIDBoLTJ2LTJoMnYyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-20"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Welcome back, {userName}! 👷</h1>
+              <p className="text-blue-100 text-lg">Manage your assigned tasks efficiently</p>
+            </div>
+            <Button
+              onClick={fetchAssignedComplaints}
+              variant="outline"
+              className="bg-white/10 hover:bg-white/20 text-white border-white/30"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
+        </div>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Assigned</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-                </div>
-                <Clock className="w-8 h-8 text-blue-600" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 -mt-8">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-xl p-6 text-white transform hover:scale-105 transition-all">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Total Assigned</p>
+                <p className="text-4xl font-bold mt-2">{stats.total}</p>
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">In Progress</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.inProgress}</p>
-                </div>
-                <Upload className="w-8 h-8 text-purple-600" />
+              <div className="bg-white/20 p-4 rounded-xl">
+                <Clock className="w-8 h-8" />
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Completed</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.completed}</p>
-                </div>
-                <CheckCircle className="w-8 h-8 text-green-600" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-xl p-6 text-white transform hover:scale-105 transition-all">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm font-medium">In Progress</p>
+                <p className="text-4xl font-bold mt-2">{stats.inProgress}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="bg-white/20 p-4 rounded-xl">
+                <Upload className="w-8 h-8" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-xl p-6 text-white transform hover:scale-105 transition-all">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Completed</p>
+                <p className="text-4xl font-bold mt-2">{stats.completed}</p>
+              </div>
+              <div className="bg-white/20 p-4 rounded-xl">
+                <CheckCircle className="w-8 h-8" />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Loading/Error States */}
         {loading && (
-          <div className="text-center py-12">
-            <div className="text-gray-500 dark:text-gray-400">Loading assigned complaints...</div>
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <Upload className="w-16 h-16 text-blue-600 mx-auto mb-4 animate-spin" />
+              <p className="text-gray-600 dark:text-gray-400 text-lg">Loading assigned complaints...</p>
+            </div>
           </div>
         )}
 
         {error && (
-          <div className="text-center py-12">
-            <div className="text-red-600 dark:text-red-400">{error}</div>
-            <Button onClick={fetchAssignedComplaints} className="mt-4">Retry</Button>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 text-center">
+            <div className="bg-red-100 dark:bg-red-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock className="w-8 h-8 text-red-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Tasks</h3>
+            <p className="text-red-600 dark:text-red-400 mb-6">{error}</p>
+            <Button onClick={fetchAssignedComplaints} className="bg-blue-600 hover:bg-blue-700 text-white">
+              Try Again
+            </Button>
           </div>
         )}
 
         {/* Assigned Complaints */}
         {!loading && !error && (
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Assigned Complaints ({complaints.length})
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                My Assigned Tasks ({complaints.length})
+              </h2>
+            </div>
             {complaints.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 dark:text-gray-400">No complaints assigned yet</p>
-                </CardContent>
-              </Card>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-12 text-center border-2 border-dashed border-gray-300 dark:border-gray-700">
+                <div className="bg-blue-100 dark:bg-blue-900/30 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Clock className="w-10 h-10 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Tasks Assigned</h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">You don't have any complaints assigned yet. Check back later!</p>
+              </div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {complaints.map((complaint) => (
-                  <Card key={complaint._id}>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-lg">{complaint.title}</CardTitle>
-                          <div className="flex items-center gap-4 mt-2 text-sm text-gray-600 dark:text-gray-400">
-                            <span className="flex items-center gap-1">
-                              <User className="w-4 h-4" />
-                              {complaint.citizenId?.name || 'Unknown Citizen'}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-4 h-4" />
-                              {new Date(complaint.createdAt).toLocaleDateString()}
-                            </span>
-                            <span className="px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-700">
+                  <div key={complaint._id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow">
+                    {/* Image Section */}
+                    <div className="relative h-48 overflow-hidden">
+                      {complaint.media && complaint.media.length > 0 ? (
+                        <img
+                          src={complaint.media[0].url}
+                          alt={complaint.title}
+                          className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
+                          <MapPin className="w-16 h-16 text-gray-400" />
+                        </div>
+                      )}
+                      <div className="absolute top-3 right-3">
+                        <span
+                          className={`px-3 py-1.5 text-xs font-semibold rounded-full backdrop-blur-sm ${
+                            statusColors[complaint.status]
+                          }`}
+                        >
+                          {complaint.status.toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Content Section */}
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2">
+                        {complaint.title}
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
+                        {complaint.description}
+                      </p>
+
+                      <div className="space-y-3 mb-6">
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
+                            <User className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            {complaint.citizenId?.name || 'Unknown Citizen'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-lg">
+                            <Calendar className="w-4 h-4 text-green-600" />
+                          </div>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            {new Date(complaint.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="bg-red-100 dark:bg-red-900/30 p-2 rounded-lg">
+                            <MapPin className="w-4 h-4 text-red-600" />
+                          </div>
+                          <span className="text-gray-700 dark:text-gray-300 line-clamp-1">
+                            {complaint.location?.address || 'Location not specified'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="bg-purple-100 dark:bg-purple-900/30 px-3 py-1.5 rounded-lg">
+                            <span className="text-purple-700 dark:text-purple-300 font-semibold">
                               {complaint.department.toUpperCase()}
                             </span>
                           </div>
                         </div>
-                        <span
-                          className={`px-3 py-1 text-sm rounded-full ${
-                            statusColors[complaint.status]
-                          }`}
-                        >
-                          {complaint.status}
-                        </span>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-                        {complaint.description}
-                      </p>
-                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        <MapPin className="w-4 h-4 mr-2" />
-                        {complaint.location?.address || 'Location not specified'}
-                      </div>
-                      {complaint.media && complaint.media.length > 0 && (
-                        <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Complaint Photos
-                          </p>
-                          <div className="grid grid-cols-3 gap-2">
-                            {complaint.media.map((media, idx) => (
-                              <img
-                                key={idx}
-                                src={media.url}
-                                alt={`Complaint photo ${idx + 1}`}
-                                className="w-full h-24 object-cover rounded"
-                              />
-                            ))}
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-3">
+                        {complaint.status === 'assigned' && (
+                          <Button
+                            className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg"
+                            onClick={() => handleStatusUpdate(complaint._id, 'in-progress')}
+                            disabled={updatingStatus}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Start Work
+                          </Button>
+                        )}
+                        {complaint.status === 'in-progress' && (
+                          <Button
+                            className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg"
+                            onClick={() => handleStatusUpdate(complaint._id, 'completed')}
+                            disabled={updatingStatus}
+                          >
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Mark Complete
+                          </Button>
+                        )}
+                        {complaint.status === 'completed' && (
+                          <div className="flex-1 bg-gradient-to-r from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30 rounded-lg py-3 text-center">
+                            <span className="text-green-700 dark:text-green-400 font-semibold flex items-center justify-center">
+                              <CheckCircle className="w-5 h-5 mr-2" />
+                              Completed
+                            </span>
                           </div>
-                        </div>
-                      )}
-                    </CardContent>
-                    <CardFooter className="flex gap-2">
-                      {complaint.status === 'assigned' && (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          icon={Upload}
-                          className="flex-1"
-                          onClick={() => handleStatusUpdate(complaint._id, 'in-progress')}
-                          disabled={updatingStatus}
-                        >
-                          Start Work
-                        </Button>
-                      )}
-                      {complaint.status === 'in-progress' && (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          icon={CheckCircle}
-                          className="flex-1"
-                          onClick={() => handleStatusUpdate(complaint._id, 'completed')}
-                          disabled={updatingStatus}
-                        >
-                          Mark Complete
-                        </Button>
-                      )}
-                      {complaint.status === 'completed' && (
-                        <div className="flex-1 text-center py-2 text-sm text-green-600 dark:text-green-400">
-                          ✓ Completed
-                        </div>
-                      )}
-                    </CardFooter>
-                  </Card>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}

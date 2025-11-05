@@ -101,6 +101,8 @@ export default function AdminDashboard() {
   const [loadingWorkers, setLoadingWorkers] = useState(false)
   const [loadingCitizens, setLoadingCitizens] = useState(false)
   const [loadingComplaints, setLoadingComplaints] = useState(false)
+  const [statsData, setStatsData] = useState<any>(null)
+  const [loadingStats, setLoadingStats] = useState(false)
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart },
@@ -162,6 +164,34 @@ export default function AdminDashboard() {
       console.error('Failed to fetch workers:', error)
     } finally {
       setLoadingWorkers(false)
+    }
+  }
+
+  // Fetch dashboard statistics
+  const fetchStats = async () => {
+    setLoadingStats(true)
+    try {
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken')
+      if (!token) {
+        console.error('No authentication token found')
+        return
+      }
+      const response = await fetch('/api/admin/stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+      const data = await response.json()
+      if (data.success) {
+        setStatsData(data.data)
+        console.log('Stats loaded:', data.data)
+      } else {
+        console.error('Failed to fetch stats:', data.message)
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error)
+    } finally {
+      setLoadingStats(false)
     }
   }
 
@@ -255,7 +285,9 @@ export default function AdminDashboard() {
 
   // Fetch data when respective tab is active
   React.useEffect(() => {
-    if (activeTab === 'offices') {
+    if (activeTab === 'overview') {
+      fetchStats()
+    } else if (activeTab === 'offices') {
       fetchOffices()
     } else if (activeTab === 'workers') {
       fetchWorkers()
@@ -274,6 +306,72 @@ export default function AdminDashboard() {
   const handleEditWorker = (worker: Worker) => {
     setSelectedWorker(worker)
     setIsEditModalOpen(true)
+  }
+
+  const handleDeleteOffice = async (officeId: string, officeName: string) => {
+    if (!confirm(`Are you sure you want to delete "${officeName}"? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken')
+      if (!token) {
+        alert('Authentication required. Please login again.')
+        return
+      }
+
+      const response = await fetch(`/api/offices/${officeId}/delete`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        alert('Office deleted successfully!')
+        fetchOffices() // Refresh the list
+      } else {
+        alert(`Failed to delete office: ${data.message}`)
+      }
+    } catch (error) {
+      console.error('Delete office error:', error)
+      alert('Failed to delete office. Please try again.')
+    }
+  }
+
+  const handleDeleteWorker = async (workerId: string, workerName: string) => {
+    if (!confirm(`Are you sure you want to delete "${workerName}"? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken')
+      if (!token) {
+        alert('Authentication required. Please login again.')
+        return
+      }
+
+      const response = await fetch(`/api/workers/${workerId}/delete`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        alert('Worker deleted successfully!')
+        fetchWorkers() // Refresh the list
+      } else {
+        alert(`Failed to delete worker: ${data.message}`)
+      }
+    } catch (error) {
+      console.error('Delete worker error:', error)
+      alert('Failed to delete worker. Please try again.')
+    }
   }
 
   return (
@@ -310,112 +408,205 @@ export default function AdminDashboard() {
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Total Citizens</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">1,234</p>
-                    </div>
-                    <Users className="w-8 h-8 text-blue-600" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Total Workers</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">89</p>
-                    </div>
-                    <Briefcase className="w-8 h-8 text-green-600" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Total Offices</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">12</p>
-                    </div>
-                    <Building2 className="w-8 h-8 text-purple-600" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Total Complaints</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">456</p>
-                    </div>
-                    <FileText className="w-8 h-8 text-orange-600" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Status Overview */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Complaints by Status</CardTitle>
-              </CardHeader>
-              <CardContent>
+            {loadingStats ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="text-gray-500 dark:text-gray-400">Loading statistics...</div>
+              </div>
+            ) : statsData ? (
+              <>
+                {/* Main Stats Cards with Gradients */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
-                    <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-1">Pending</p>
-                    <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">45</p>
-                  </div>
-                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                    <p className="text-sm text-blue-800 dark:text-blue-200 mb-1">Assigned</p>
-                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">78</p>
-                  </div>
-                  <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-                    <p className="text-sm text-purple-800 dark:text-purple-200 mb-1">In Progress</p>
-                    <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">123</p>
-                  </div>
-                  <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                    <p className="text-sm text-green-800 dark:text-green-200 mb-1">Completed</p>
-                    <p className="text-2xl font-bold text-green-900 dark:text-green-100">210</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Category Analytics */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Complaints by Category</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {['Road', 'Water', 'Sewage', 'Electricity', 'Garbage'].map((category, index) => {
-                    const values = [92, 78, 56, 43, 31]
-                    const colors = ['bg-red-500', 'bg-blue-500', 'bg-brown-500', 'bg-yellow-500', 'bg-green-500']
-                    return (
-                      <div key={category}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            {category}
-                          </span>
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {values[index]}
-                          </span>
+                  <Card className="overflow-hidden">
+                    <CardContent className="pt-6 relative">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 opacity-10 rounded-full -mr-8 -mt-8" />
+                      <div className="flex items-center justify-between relative">
+                        <div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Total Citizens</p>
+                          <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1">
+                            {statsData.overview.totalCitizens}
+                          </p>
                         </div>
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                          <div
-                            className={`${colors[index]} h-2 rounded-full`}
-                            style={{ width: `${(values[index] / 92) * 100}%` }}
-                          />
+                        <div className="bg-gradient-to-br from-blue-400 to-blue-600 p-3 rounded-xl shadow-lg">
+                          <Users className="w-8 h-8 text-white" />
                         </div>
                       </div>
-                    )
-                  })}
+                    </CardContent>
+                  </Card>
+
+                  <Card className="overflow-hidden">
+                    <CardContent className="pt-6 relative">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 opacity-10 rounded-full -mr-8 -mt-8" />
+                      <div className="flex items-center justify-between relative">
+                        <div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Total Workers</p>
+                          <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1">
+                            {statsData.overview.totalWorkers}
+                          </p>
+                        </div>
+                        <div className="bg-gradient-to-br from-green-400 to-green-600 p-3 rounded-xl shadow-lg">
+                          <Briefcase className="w-8 h-8 text-white" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="overflow-hidden">
+                    <CardContent className="pt-6 relative">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-400 to-purple-600 opacity-10 rounded-full -mr-8 -mt-8" />
+                      <div className="flex items-center justify-between relative">
+                        <div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Total Offices</p>
+                          <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1">
+                            {statsData.overview.totalOffices}
+                          </p>
+                        </div>
+                        <div className="bg-gradient-to-br from-purple-400 to-purple-600 p-3 rounded-xl shadow-lg">
+                          <Building2 className="w-8 h-8 text-white" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="overflow-hidden">
+                    <CardContent className="pt-6 relative">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-orange-400 to-orange-600 opacity-10 rounded-full -mr-8 -mt-8" />
+                      <div className="flex items-center justify-between relative">
+                        <div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Total Complaints</p>
+                          <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1">
+                            {statsData.overview.totalComplaints}
+                          </p>
+                        </div>
+                        <div className="bg-gradient-to-br from-orange-400 to-orange-600 p-3 rounded-xl shadow-lg">
+                          <FileText className="w-8 h-8 text-white" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </CardContent>
-            </Card>
+
+                {/* Status Overview */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <BarChart className="w-5 h-5 mr-2 text-gray-600" />
+                      Complaints by Status
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                      <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-900/20 p-5 rounded-xl border border-yellow-200 dark:border-yellow-800 transition-all hover:shadow-lg hover:scale-105">
+                        <p className="text-sm text-yellow-700 dark:text-yellow-300 font-medium mb-2">Pending</p>
+                        <p className="text-3xl font-bold text-yellow-900 dark:text-yellow-100">
+                          {statsData.complaintStatus.pending}
+                        </p>
+                      </div>
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-900/20 p-5 rounded-xl border border-blue-200 dark:border-blue-800 transition-all hover:shadow-lg hover:scale-105">
+                        <p className="text-sm text-blue-700 dark:text-blue-300 font-medium mb-2">Assigned</p>
+                        <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
+                          {statsData.complaintStatus.assigned}
+                        </p>
+                      </div>
+                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-900/20 p-5 rounded-xl border border-purple-200 dark:border-purple-800 transition-all hover:shadow-lg hover:scale-105">
+                        <p className="text-sm text-purple-700 dark:text-purple-300 font-medium mb-2">In Progress</p>
+                        <p className="text-3xl font-bold text-purple-900 dark:text-purple-100">
+                          {statsData.complaintStatus.inProgress}
+                        </p>
+                      </div>
+                      <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-900/20 p-5 rounded-xl border border-green-200 dark:border-green-800 transition-all hover:shadow-lg hover:scale-105">
+                        <p className="text-sm text-green-700 dark:text-green-300 font-medium mb-2">Completed</p>
+                        <p className="text-3xl font-bold text-green-900 dark:text-green-100">
+                          {statsData.complaintStatus.completed}
+                        </p>
+                      </div>
+                      <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-900/20 p-5 rounded-xl border border-red-200 dark:border-red-800 transition-all hover:shadow-lg hover:scale-105">
+                        <p className="text-sm text-red-700 dark:text-red-300 font-medium mb-2">Rejected</p>
+                        <p className="text-3xl font-bold text-red-900 dark:text-red-100">
+                          {statsData.complaintStatus.rejected}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Category Analytics */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <BarChart className="w-5 h-5 mr-2 text-gray-600" />
+                      Complaints by Department
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {statsData.complaintsByDepartment && statsData.complaintsByDepartment.length > 0 ? (
+                      <div className="space-y-4">
+                        {statsData.complaintsByDepartment.map((dept: any, index: number) => {
+                          const colors = [
+                            { bg: 'bg-red-500', border: 'border-red-200', text: 'text-red-700' },
+                            { bg: 'bg-blue-500', border: 'border-blue-200', text: 'text-blue-700' },
+                            { bg: 'bg-green-500', border: 'border-green-200', text: 'text-green-700' },
+                            { bg: 'bg-yellow-500', border: 'border-yellow-200', text: 'text-yellow-700' },
+                            { bg: 'bg-purple-500', border: 'border-purple-200', text: 'text-purple-700' },
+                            { bg: 'bg-pink-500', border: 'border-pink-200', text: 'text-pink-700' },
+                          ]
+                          const colorSet = colors[index % colors.length]
+                          const maxCount = statsData.complaintsByDepartment[0]?.count || 1
+                          const percentage = (dept.count / maxCount) * 100
+                          
+                          return (
+                            <div key={dept._id} className="group">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className={`text-sm font-semibold ${colorSet.text} dark:text-gray-300`}>
+                                  {dept._id || 'Unassigned'}
+                                </span>
+                                <span className="text-sm font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
+                                  {dept.count}
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden shadow-inner">
+                                <div
+                                  className={`${colorSet.bg} h-3 rounded-full transition-all duration-500 ease-out group-hover:opacity-90`}
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                        No department data available
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Rating Statistics */}
+                {statsData.ratings && statsData.ratings.totalRatings > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Average Rating</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-center space-x-4">
+                        <div className="text-center">
+                          <p className="text-5xl font-bold text-yellow-500">
+                            {statsData.ratings.avgRating.toFixed(1)}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                            Based on {statsData.ratings.totalRatings} ratings
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                No statistics available
+              </div>
+            )}
           </div>
         )}
 
@@ -534,7 +725,12 @@ export default function AdminDashboard() {
                             >
                               Edit
                             </Button>
-                            <Button variant="danger" size="sm" icon={Trash2}>
+                            <Button 
+                              variant="danger" 
+                              size="sm" 
+                              icon={Trash2}
+                              onClick={() => handleDeleteOffice(office._id, office.name)}
+                            >
                               Delete
                             </Button>
                           </td>
@@ -669,7 +865,12 @@ export default function AdminDashboard() {
                             >
                               Edit
                             </Button>
-                            <Button variant="danger" size="sm" icon={Trash2}>
+                            <Button 
+                              variant="danger" 
+                              size="sm" 
+                              icon={Trash2}
+                              onClick={() => handleDeleteWorker(worker._id, worker.name)}
+                            >
                               Delete
                             </Button>
                           </td>

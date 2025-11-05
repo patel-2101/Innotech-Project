@@ -84,12 +84,19 @@ export async function POST(request: Request) {
 
     // Add role-specific data
     if (role === 'worker' && worker) {
+      userData.name = worker.name
       userData.department = worker.department
       userData.status = worker.status
     } else if (role === 'office') {
       const office = await Office.findOne({ userId: user.userId })
       if (office) {
+        userData.name = office.name
         userData.department = office.department
+      }
+    } else if (role === 'admin' || role === 'superadmin') {
+      const admin = await Admin.findOne({ userId: user.userId })
+      if (admin) {
+        userData.name = admin.name
       }
     }
 

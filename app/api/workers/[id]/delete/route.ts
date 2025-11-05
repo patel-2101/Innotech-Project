@@ -9,9 +9,10 @@ async function handler(request: Request, _user: { id: string; role: string }) {
     await dbConnect()
 
     const { pathname } = new URL(request.url)
-    const workerId = pathname.split('/')[4] // /api/workers/[id]/delete
+    const pathParts = pathname.split('/').filter(part => part) // Remove empty strings
+    const workerId = pathParts[2] // ['api', 'workers', '[id]', 'delete']
 
-    if (!workerId) {
+    if (!workerId || workerId === 'delete') {
       return NextResponse.json(
         { success: false, message: 'Worker ID is required' },
         { status: 400 }

@@ -52,6 +52,9 @@ export default function CitizenLoginPage() {
         if (data.data.citizen.phone) {
           localStorage.setItem('userPhone', data.data.citizen.phone)
         }
+        if (data.data.citizen.profilePhoto) {
+          localStorage.setItem('userPhoto', data.data.citizen.profilePhoto)
+        }
         
         // Trigger navbar update
         window.dispatchEvent(new Event('storage'))

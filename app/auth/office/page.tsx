@@ -40,7 +40,7 @@ export default function OfficeLogin() {
         localStorage.setItem('authToken', data.data.token)
         localStorage.setItem('userRole', 'office')
         localStorage.setItem('userId', data.data.user.id)
-        localStorage.setItem('userName', data.data.user.userId)
+        localStorage.setItem('userName', data.data.user.name || data.data.user.userId)
         if (data.data.user.department) {
           localStorage.setItem('userDepartment', data.data.user.department)
         }
