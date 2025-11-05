@@ -3,14 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=18.17.0"
+    "node": "18.x"
   },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "postinstall": "prisma generate || echo 'No Prisma schema found'"
+    "lint": "eslint"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
