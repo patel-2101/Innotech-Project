@@ -374,6 +374,39 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleDeleteCitizen = async (citizenId: string, citizenName: string) => {
+    if (!confirm(`Are you sure you want to delete "${citizenName}"? This will also delete all their complaints. This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken')
+      if (!token) {
+        alert('Authentication required. Please login again.')
+        return
+      }
+
+      const response = await fetch(`/api/admin/citizens/${citizenId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        alert('Citizen deleted successfully!')
+        fetchCitizens() // Refresh the list
+      } else {
+        alert(`Failed to delete citizen: ${data.message}`)
+      }
+    } catch (error) {
+      console.error('Delete citizen error:', error)
+      alert('Failed to delete citizen. Please try again.')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <DashboardHeader
@@ -1008,9 +1041,17 @@ export default function AdminDashboard() {
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm">
+                          <td className="px-4 py-4 whitespace-nowrap text-sm flex gap-2">
                             <Button variant="outline" size="sm">
                               View Details
+                            </Button>
+                            <Button 
+                              variant="danger" 
+                              size="sm" 
+                              icon={Trash2}
+                              onClick={() => handleDeleteCitizen(citizen._id, citizen.name)}
+                            >
+                              Delete
                             </Button>
                           </td>
                         </tr>

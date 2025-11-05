@@ -14,6 +14,7 @@ export function Navbar() {
   const [userRole, setUserRole] = useState('')
   const [userName, setUserName] = useState('')
   const [userPhoto, setUserPhoto] = useState('')
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     const checkAuth = () => {
@@ -26,6 +27,7 @@ export function Navbar() {
       setUserRole(role || '')
       setUserName(name || '')
       setUserPhoto(photo || '')
+      setMounted(true)
     }
 
     // Check on mount
@@ -70,6 +72,15 @@ export function Navbar() {
     }
   }
 
+  const getProfileLink = () => {
+    switch (userRole) {
+      case 'citizen': return '/citizen/profile'
+      case 'worker': return '/worker/profile'
+      case 'office': return '/office/profile'
+      default: return null
+    }
+  }
+
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/about', label: 'About' },
@@ -111,7 +122,9 @@ export function Navbar() {
             ))}
             
             {/* Login/Profile Dropdown */}
-            {isLoggedIn ? (
+            {!mounted ? (
+              <div className="w-32 h-10 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse"></div>
+            ) : isLoggedIn ? (
               <div className="relative">
                 <button
                   onClick={() => setIsLoginDropdownOpen(!isLoginDropdownOpen)}
@@ -135,6 +148,15 @@ export function Navbar() {
                     >
                       Dashboard
                     </Link>
+                    {getProfileLink() && (
+                      <Link
+                        href={getProfileLink()!}
+                        onClick={() => setIsLoginDropdownOpen(false)}
+                        className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        Profile
+                      </Link>
+                    )}
                     <button
                       onClick={() => {
                         setIsLoginDropdownOpen(false)
@@ -220,6 +242,15 @@ export function Navbar() {
                     >
                       Dashboard
                     </Link>
+                    {getProfileLink() && (
+                      <Link
+                        href={getProfileLink()!}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                      >
+                        Profile
+                      </Link>
+                    )}
                     <button
                       onClick={() => {
                         setIsMenuOpen(false)
