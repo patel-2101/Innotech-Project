@@ -63,15 +63,27 @@ export async function POST(request: Request) {
 
     // Send OTP based on method
     if (method === 'email') {
+      if (!worker.email) {
+        return NextResponse.json(
+          { success: false, message: 'Email not available' },
+          { status: 400 }
+        )
+      }
       await sendOTPEmail(worker.email, otp, worker.name)
     } else {
+      if (!worker.phone) {
+        return NextResponse.json(
+          { success: false, message: 'Phone not available' },
+          { status: 400 }
+        )
+      }
       await sendOTPSMS(worker.phone, otp)
     }
 
     // Mask contact info for response
     const maskedContact = method === 'email' 
-      ? worker.email.replace(/(.{2})(.*)(@.*)/, '$1***$3')
-      : worker.phone.replace(/(\d{2})(\d{6})(\d{2})/, '$1******$3')
+      ? worker.email?.replace(/(.{2})(.*)(@.*)/, '$1***$3') || ''
+      : worker.phone?.replace(/(\d{2})(\d{6})(\d{2})/, '$1******$3') || ''
 
     return NextResponse.json({
       success: true,
