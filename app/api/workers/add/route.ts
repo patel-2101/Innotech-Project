@@ -84,6 +84,7 @@ async function handler(request: Request, _user: { id: string; role: string }) {
       name,
       userId,
       password: hashedPassword,
+      plainPassword: password, // Store plain password for admin viewing
       department,
       phone,
       email,

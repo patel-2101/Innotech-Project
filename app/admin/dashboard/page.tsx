@@ -10,6 +10,8 @@ import { Modal } from '@/components/ui/modal'
 import { Input, Select } from '@/components/ui/input'
 import { OfficeCreationModal } from '@/components/dashboard/OfficeCreationModal'
 import { WorkerCreationModal } from '@/components/dashboard/WorkerCreationModal'
+import { OfficeEditModal } from '@/components/dashboard/OfficeEditModal'
+import { WorkerEditModal } from '@/components/dashboard/WorkerEditModal'
 
 type TabType = 'overview' | 'offices' | 'workers' | 'citizens' | 'complaints' | 'categories'
 
@@ -31,6 +33,7 @@ interface Worker {
   _id: string
   name: string
   userId: string
+  plainPassword?: string
   department: string
   phone: string
   email: string
@@ -58,15 +61,46 @@ interface Citizen {
   }
 }
 
+interface Complaint {
+  _id: string
+  title: string
+  description: string
+  category: string
+  department: string
+  status: 'pending' | 'assigned' | 'in-progress' | 'completed' | 'rejected'
+  createdAt: string
+  citizenId: {
+    name: string
+    email: string
+  }
+  location: {
+    address: string
+    coordinates: [number, number]
+  }
+  assignedTo?: {
+    name: string
+    employeeId: string
+  }
+  officeId?: {
+    name: string
+    department: string
+  }
+}
+
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [selectedOffice, setSelectedOffice] = useState<Office | null>(null)
+  const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null)
   const [offices, setOffices] = useState<Office[]>([])
   const [workers, setWorkers] = useState<Worker[]>([])
   const [citizens, setCitizens] = useState<Citizen[]>([])
+  const [complaints, setComplaints] = useState<Complaint[]>([])
   const [loadingOffices, setLoadingOffices] = useState(false)
   const [loadingWorkers, setLoadingWorkers] = useState(false)
   const [loadingCitizens, setLoadingCitizens] = useState(false)
+  const [loadingComplaints, setLoadingComplaints] = useState(false)
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart },
@@ -176,6 +210,49 @@ export default function AdminDashboard() {
     }
   }
 
+  // Fetch all complaints from database
+  const fetchComplaints = async () => {
+    setLoadingComplaints(true)
+    try {
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken')
+      
+      console.log('Fetching all complaints...')
+      
+      if (!token) {
+        console.error('No authentication token found')
+        alert('Session expired. Please login again.')
+        return
+      }
+      
+      const response = await fetch('/api/complaints/all', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      console.log('Complaints response status:', response.status)
+      
+      const data = await response.json()
+      console.log('Complaints data:', data)
+      
+      if (data.success) {
+        setComplaints(data.data)
+        console.log('Complaints loaded:', data.data.length)
+      } else {
+        console.error('Failed to fetch complaints:', data.message)
+        if (response.status === 401 || response.status === 403) {
+          alert(`Access Error: ${data.message}. Please re-login.`)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch complaints:', error)
+      alert('Network error while fetching complaints')
+    } finally {
+      setLoadingComplaints(false)
+    }
+  }
+
   // Fetch data when respective tab is active
   React.useEffect(() => {
     if (activeTab === 'offices') {
@@ -184,8 +261,20 @@ export default function AdminDashboard() {
       fetchWorkers()
     } else if (activeTab === 'citizens') {
       fetchCitizens()
+    } else if (activeTab === 'complaints') {
+      fetchComplaints()
     }
   }, [activeTab])
+
+  const handleEditOffice = (office: Office) => {
+    setSelectedOffice(office)
+    setIsEditModalOpen(true)
+  }
+
+  const handleEditWorker = (worker: Worker) => {
+    setSelectedWorker(worker)
+    setIsEditModalOpen(true)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -437,7 +526,12 @@ export default function AdminDashboard() {
                             {office.workers?.length || 0}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm flex gap-2">
-                            <Button variant="outline" size="sm" icon={Edit}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              icon={Edit}
+                              onClick={() => handleEditOffice(office)}
+                            >
                               Edit
                             </Button>
                             <Button variant="danger" size="sm" icon={Trash2}>
@@ -499,6 +593,9 @@ export default function AdminDashboard() {
                           Email
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                          Password
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                           Status
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
@@ -533,6 +630,27 @@ export default function AdminDashboard() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                             {worker.email}
                           </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <div className="flex items-center gap-2">
+                              <code className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-900 dark:text-white font-mono text-xs">
+                                {worker.plainPassword || '••••••••'}
+                              </code>
+                              {worker.plainPassword && (
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(worker.plainPassword!)
+                                    alert('Password copied to clipboard!')
+                                  }}
+                                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                  title="Copy Password"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`px-2 py-1 text-xs rounded-full ${
                               worker.status === 'active' 
@@ -543,7 +661,12 @@ export default function AdminDashboard() {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm flex gap-2">
-                            <Button variant="outline" size="sm" icon={Edit}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              icon={Edit}
+                              onClick={() => handleEditWorker(worker)}
+                            >
                               Edit
                             </Button>
                             <Button variant="danger" size="sm" icon={Trash2}>
@@ -699,6 +822,131 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* Complaints Tab */}
+        {activeTab === 'complaints' && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                All Complaints ({complaints.length})
+              </h2>
+            </div>
+            <Card>
+              <div className="overflow-x-auto">
+                {loadingComplaints ? (
+                  <div className="flex justify-center items-center py-12">
+                    <div className="text-gray-500 dark:text-gray-400">Loading complaints...</div>
+                  </div>
+                ) : complaints.length === 0 ? (
+                  <div className="flex flex-col justify-center items-center py-12">
+                    <FileText className="w-12 h-12 text-gray-400 mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400">No complaints filed yet</p>
+                  </div>
+                ) : (
+                  <table className="w-full">
+                    <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                          Title
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                          Citizen
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                          Department
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                          Assigned To
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                          Office
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                          Date
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                          Location
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {complaints.map((complaint) => (
+                        <tr key={complaint._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                            <div className="font-medium">{complaint.title}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">
+                              {complaint.description}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <div className="text-gray-900 dark:text-white">
+                              {complaint.citizenId?.name || 'Unknown'}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {complaint.citizenId?.email}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              complaint.department === 'road' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                              complaint.department === 'water' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                              complaint.department === 'sewage' ? 'bg-brown-100 text-brown-800 dark:bg-brown-900 dark:text-brown-200' :
+                              complaint.department === 'electricity' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                              complaint.department === 'garbage' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                              'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                            }`}>
+                              {complaint.department.toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              complaint.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                              complaint.status === 'assigned' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                              complaint.status === 'in-progress' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
+                              complaint.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                              'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                            }`}>
+                              {complaint.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                            {complaint.assignedTo ? (
+                              <div>
+                                <div className="text-gray-900 dark:text-white">{complaint.assignedTo.name}</div>
+                                <div className="text-xs">{complaint.assignedTo.employeeId}</div>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">Not assigned</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                            {complaint.officeId ? (
+                              <div>
+                                <div className="text-gray-900 dark:text-white">{complaint.officeId.name}</div>
+                                <div className="text-xs">{complaint.officeId.department}</div>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">Not assigned</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                            {new Date(complaint.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
+                            {complaint.location?.address || 'Not specified'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </Card>
+          </div>
+        )}
+
         {/* Categories Tab */}
         {activeTab === 'categories' && (
           <div>
@@ -745,11 +993,33 @@ export default function AdminDashboard() {
         onSuccess={fetchOffices}
       />
 
+      {/* Office Edit Modal */}
+      <OfficeEditModal
+        isOpen={isEditModalOpen && activeTab === 'offices'}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setSelectedOffice(null)
+        }}
+        onSuccess={fetchOffices}
+        office={selectedOffice}
+      />
+
       {/* Worker Creation Modal */}
       <WorkerCreationModal 
         isOpen={isModalOpen && activeTab === 'workers'}
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchWorkers}
+      />
+
+      {/* Worker Edit Modal */}
+      <WorkerEditModal
+        isOpen={isEditModalOpen && activeTab === 'workers'}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setSelectedWorker(null)
+        }}
+        onSuccess={fetchWorkers}
+        worker={selectedWorker}
       />
 
       {/* Generic Modal for other tabs */}

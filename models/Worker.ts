@@ -5,6 +5,7 @@ export interface IWorker {
   name: string
   userId: string
   password: string
+  plainPassword?: string
   department: string
   assignedTasks: mongoose.Types.ObjectId[]
   location?: {
@@ -37,6 +38,10 @@ const WorkerSchema = new Schema<IWorker>(
       type: String,
       required: [true, 'Password is required'],
       minlength: 6,
+    },
+    plainPassword: {
+      type: String,
+      select: false, // Hidden by default for security
     },
     department: {
       type: String,

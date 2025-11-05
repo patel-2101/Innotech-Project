@@ -71,8 +71,8 @@ async function handler(request: Request, user: { id: string; role: string }) {
       location: {
         type: 'Point',
         coordinates: [longitude, latitude],
+        address: address || '',
       },
-      address,
       status: 'pending',
     })
 

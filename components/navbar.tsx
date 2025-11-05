@@ -1,13 +1,69 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
-import { Menu, X, AlertCircle, UserCircle, ChevronDown } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Menu, X, AlertCircle, UserCircle, ChevronDown, LogOut } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
+import { useRouter } from 'next/navigation'
 
 export function Navbar() {
+  const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isLoginDropdownOpen, setIsLoginDropdownOpen] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userRole, setUserRole] = useState('')
+  const [userName, setUserName] = useState('')
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem('authToken')
+      const role = localStorage.getItem('userRole')
+      const name = localStorage.getItem('userName')
+      
+      setIsLoggedIn(!!token)
+      setUserRole(role || '')
+      setUserName(name || '')
+    }
+
+    // Check on mount
+    checkAuth()
+
+    // Listen for storage changes (login/logout)
+    window.addEventListener('storage', checkAuth)
+    
+    return () => {
+      window.removeEventListener('storage', checkAuth)
+    }
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken')
+    localStorage.removeItem('userRole')
+    localStorage.removeItem('userId')
+    localStorage.removeItem('userName')
+    localStorage.removeItem('userEmail')
+    localStorage.removeItem('userPhone')
+    localStorage.removeItem('userDepartment')
+    
+    setIsLoggedIn(false)
+    setUserRole('')
+    setUserName('')
+    
+    // Trigger navbar update
+    window.dispatchEvent(new Event('storage'))
+    
+    router.push('/')
+  }
+
+  const getDashboardLink = () => {
+    switch (userRole) {
+      case 'citizen': return '/citizen/dashboard'
+      case 'worker': return '/worker/dashboard'
+      case 'office': return '/office/dashboard'
+      case 'admin': return '/admin/dashboard'
+      default: return '/'
+    }
+  }
 
   const navLinks = [
     { href: '/', label: 'Home' },
@@ -49,32 +105,67 @@ export function Navbar() {
               </Link>
             ))}
             
-            {/* Login Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setIsLoginDropdownOpen(!isLoginDropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
-              >
-                <UserCircle className="w-5 h-5" />
-                <span>Login</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${isLoginDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {isLoginDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
-                  {loginOptions.map((option) => (
+            {/* Login/Profile Dropdown */}
+            {isLoggedIn ? (
+              <div className="relative">
+                <button
+                  onClick={() => setIsLoginDropdownOpen(!isLoginDropdownOpen)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition-colors"
+                >
+                  <UserCircle className="w-5 h-5" />
+                  <span>{userName || userRole}</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${isLoginDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {isLoginDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
                     <Link
-                      key={option.href}
-                      href={option.href}
+                      href={getDashboardLink()}
                       onClick={() => setIsLoginDropdownOpen(false)}
-                      className={`block px-4 py-2 ${option.color} dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
+                      className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
-                      {option.label}
+                      Dashboard
                     </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+                    <button
+                      onClick={() => {
+                        setIsLoginDropdownOpen(false)
+                        handleLogout()
+                      }}
+                      className="w-full text-left px-4 py-2 text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="relative">
+                <button
+                  onClick={() => setIsLoginDropdownOpen(!isLoginDropdownOpen)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+                >
+                  <UserCircle className="w-5 h-5" />
+                  <span>Login</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${isLoginDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {isLoginDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
+                    {loginOptions.map((option) => (
+                      <Link
+                        key={option.href}
+                        href={option.href}
+                        onClick={() => setIsLoginDropdownOpen(false)}
+                        className={`block px-4 py-2 ${option.color} dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
+                      >
+                        {option.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             
             <ThemeToggle />
           </div>
@@ -106,21 +197,48 @@ export function Navbar() {
                 </Link>
               ))}
               
-              {/* Mobile Login Options */}
+              {/* Mobile Login/Profile Options */}
               <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                <p className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
-                  Login As
-                </p>
-                {loginOptions.map((option) => (
-                  <Link
-                    key={option.href}
-                    href={option.href}
-                    onClick={() => setIsMenuOpen(false)}
-                    className={`block px-4 py-2 ${option.color} dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors`}
-                  >
-                    {option.label}
-                  </Link>
-                ))}
+                {isLoggedIn ? (
+                  <>
+                    <p className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                      {userName || userRole}
+                    </p>
+                    <Link
+                      href={getDashboardLink()}
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                    >
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false)
+                        handleLogout()
+                      }}
+                      className="w-full text-left px-4 py-2 text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                      Login As
+                    </p>
+                    {loginOptions.map((option) => (
+                      <Link
+                        key={option.href}
+                        href={option.href}
+                        onClick={() => setIsMenuOpen(false)}
+                        className={`block px-4 py-2 ${option.color} dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors`}
+                      >
+                        {option.label}
+                      </Link>
+                    ))}
+                  </>
+                )}
               </div>
             </div>
           </div>

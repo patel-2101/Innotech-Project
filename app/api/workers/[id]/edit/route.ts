@@ -40,6 +40,7 @@ async function handler(request: Request, _user: { id: string; role: string }) {
     if (email) worker.email = email
     if (password) {
       worker.password = await hashPassword(password)
+      worker.plainPassword = password // Update plain password for admin viewing
     }
 
     await worker.save()

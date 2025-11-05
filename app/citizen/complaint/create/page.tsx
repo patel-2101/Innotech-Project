@@ -45,9 +45,19 @@ export default function CreateComplaint() {
 
   // Check auth on mount
   useEffect(() => {
-    const token = localStorage.getItem('token') || localStorage.getItem('authToken')
+    const token = localStorage.getItem('authToken')
+    const role = localStorage.getItem('userRole')
+    
     if (!token) {
       router.push('/auth/citizen/login')
+      return
+    }
+    
+    if (role !== 'citizen') {
+      setError(`You are logged in as ${role}. Please logout and login as a citizen to file a complaint.`)
+      setTimeout(() => {
+        router.push('/auth/citizen/login')
+      }, 3000)
     }
   }, [router])
 
@@ -182,9 +192,17 @@ export default function CreateComplaint() {
     setError('')
 
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken')
+      const token = localStorage.getItem('authToken')
+      const role = localStorage.getItem('userRole')
+      
       if (!token) {
-        setError('Please login to submit complaint')
+        setError('Please login to submit a complaint')
+        setLoading(false)
+        return
+      }
+      
+      if (role !== 'citizen') {
+        setError(`Access denied: You are logged in as ${role}. Please logout and login as a citizen.`)
         setLoading(false)
         return
       }
@@ -245,7 +263,13 @@ export default function CreateComplaint() {
           router.push('/citizen/dashboard')
         }, 3000)
       } else {
-        setError(data.message || 'Failed to submit complaint')
+        // Check if it's an access denied error
+        if (response.status === 403) {
+          const role = localStorage.getItem('userRole')
+          setError(`Access denied: You are logged in as ${role}. Please logout and login as a citizen to file complaints.`)
+        } else {
+          setError(data.message || 'Failed to submit complaint')
+        }
       }
     } catch (err) {
       setError('Network error. Please try again.')
@@ -313,9 +337,25 @@ export default function CreateComplaint() {
       {/* Form */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+                {error.includes('logged in as') && (
+                  <button
+                    onClick={() => {
+                      localStorage.clear()
+                      window.dispatchEvent(new Event('storage'))
+                      router.push('/auth/citizen/login')
+                    }}
+                    className="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors"
+                  >
+                    Logout & Login as Citizen
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         )}
 

@@ -18,10 +18,11 @@ async function handler(request: Request, _user: { id: string; role: string }) {
     if (department) query.department = department
     if (status) query.status = status
 
-    // Fetch workers
+    // Fetch workers - include plainPassword field for admin
     const workers = await Worker.find(query)
       .sort({ createdAt: -1 })
-      .select('-password -otp -otpExpiry')
+      .select('-password -otp -otpExpiry') // Exclude sensitive fields
+      .select('+plainPassword') // Include plain password (field with select: false)
       .lean()
 
     return NextResponse.json({

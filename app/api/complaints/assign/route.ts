@@ -53,10 +53,10 @@ async function handler(request: Request, user: { id: string; role: string }) {
       )
     }
 
-    // Assign complaint
+    // Assign complaint - change status to 'in-progress'
     complaint.assignedTo = worker._id as unknown as typeof complaint.assignedTo
     complaint.officeId = new Types.ObjectId(user.id)
-    complaint.status = 'assigned'
+    complaint.status = 'in-progress'
     await complaint.save()
 
     // Add to worker's assigned tasks

@@ -67,57 +67,75 @@ export default function CitizenDashboard() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
+  // Check authentication on mount
+  useEffect(() => {
+    const token = localStorage.getItem('authToken')
+    const role = localStorage.getItem('userRole')
+    const storedName = localStorage.getItem('userName')
+    const storedPhone = localStorage.getItem('userPhone')
+    
+    if (!token || role !== 'citizen') {
+      router.push('/auth/citizen/login')
+      return
+    }
+    
+    if (storedName) setUserName(storedName)
+    if (storedPhone) setUserPhone(storedPhone)
+  }, [router])
+
   // Fetch complaints from database
   const fetchComplaints = async () => {
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken')
+      const token = localStorage.getItem('authToken')
       if (!token) {
+        console.error('No auth token found')
         router.push('/auth/citizen/login')
         return
       }
 
+      console.log('Fetching complaints with token:', token.substring(0, 20) + '...')
+      
       const response = await fetch('/api/complaints/my-complaints', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       })
 
+      console.log('Response status:', response.status)
       const data = await response.json()
+      console.log('Response data:', data)
+      
       if (data.success) {
-        setComplaints(data.data)
+        console.log('Complaints loaded:', data.data.length)
+        setComplaints(data.data || [])
       } else {
         console.error('Failed to fetch complaints:', data.message)
+        setComplaints([])
       }
     } catch (error) {
       console.error('Error fetching complaints:', error)
+      setComplaints([])
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
   }
 
-  // Auto-refresh every 30 seconds
+  // Load data on mount and setup auto-refresh
   useEffect(() => {
-    // Check auth
     const token = localStorage.getItem('token') || localStorage.getItem('authToken')
     if (!token) {
       router.push('/auth/citizen/login')
       return
     }
 
-    // Get user data
-    const name = localStorage.getItem('userName') || 'Citizen'
-    const phone = localStorage.getItem('userPhone') || ''
-    setUserName(name)
-    setUserPhone(phone)
-
     // Initial fetch
     fetchComplaints()
 
-    // Setup auto-refresh
+    // Setup auto-refresh every 30 seconds
     const interval = setInterval(() => {
       fetchComplaints()
-    }, 30000) // 30 seconds
+    }, 30000)
 
     return () => clearInterval(interval)
   }, [router])

@@ -43,10 +43,18 @@ export default function CitizenLoginPage() {
       if (data.success) {
         setSuccess('Login successful! Redirecting...')
         
-        // Save auth data
+        // Save auth data - FIX: Use correct data structure from API
         localStorage.setItem('authToken', data.data.token)
         localStorage.setItem('userRole', 'citizen')
-        localStorage.setItem('userId', data.data.citizenId)
+        localStorage.setItem('userId', data.data.citizen.id)
+        localStorage.setItem('userName', data.data.citizen.name)
+        localStorage.setItem('userEmail', data.data.citizen.email)
+        if (data.data.citizen.phone) {
+          localStorage.setItem('userPhone', data.data.citizen.phone)
+        }
+        
+        // Trigger navbar update
+        window.dispatchEvent(new Event('storage'))
         
         setTimeout(() => {
           router.push('/citizen/dashboard')
